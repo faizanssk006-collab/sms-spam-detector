@@ -139,7 +139,7 @@ COMMON_SPAM_WORDS = {
 user_message = st.text_area(
     "Type or paste an SMS message:",
     height=130,
-    placeholder="e.g., Free entry in 2 a weekly competition to win cash prizes! Text WIN to 87121..."
+    placeholder="Type or paste your SMS message here..."
 )
 
 classify_btn = st.button("🔍 Check SMS", type="primary", use_container_width=True)
