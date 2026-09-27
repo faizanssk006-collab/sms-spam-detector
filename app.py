@@ -6,9 +6,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
-# ---------------------------------------------------------
-# Page Configuration (Clean, Centered, No Sidebar)
-# ---------------------------------------------------------
 st.set_page_config(
     page_title="SMS Spam Detector",
     page_icon="📬",
@@ -16,24 +13,18 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ---------------------------------------------------------
-# Custom Styling - Clean, Minimalist, Humanistic
-# ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Hide sidebar completely */
     [data-testid="stSidebar"], section[data-testid="stSidebar"] {
         display: none !important;
     }
     
-    /* Center container styling */
     .block-container {
         padding-top: 2.5rem;
         padding-bottom: 3rem;
         max-width: 720px;
     }
     
-    /* Result Badges */
     .result-card-spam {
         background: #fff1f0;
         border: 2px solid #ff4d4f;
@@ -63,7 +54,6 @@ st.markdown("""
         margin-bottom: 10px;
     }
     
-    /* Tags for detected keywords */
     .tag {
         display: inline-block;
         padding: 3px 9px;
@@ -86,13 +76,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-# ---------------------------------------------------------
-# Load or Fit Model Pipeline (Cached)
-# ---------------------------------------------------------
 @st.cache_resource
 def get_classifier():
-    """Loads pre-trained model artifact or fits if missing."""
     model_path = "sms_spam_model.joblib"
     
     if os.path.exists(model_path):
@@ -117,25 +102,17 @@ def get_classifier():
 
     return None
 
-
 pipeline = get_classifier()
 
-# ---------------------------------------------------------
-# Main Page Header
-# ---------------------------------------------------------
 st.title("📬 SMS Spam Detector")
 st.write("A simple Machine Learning tool to check whether a text message is **Spam** or **Legitimate (Ham)**.")
 
-# Common spam keywords for detection
 COMMON_SPAM_WORDS = {
     'free', 'win', 'winner', 'cash', 'prize', 'claim', 'urgent', 'txt', 'reply',
     'call', 'selected', 'won', 'award', 'guaranteed', 'bonus', 'credit', 'account',
     'suspended', 'password', 'verify', 'click', 'subscribe', 'congratulations', 'apply'
 }
 
-# ---------------------------------------------------------
-# Input Area
-# ---------------------------------------------------------
 user_message = st.text_area(
     "Type or paste an SMS message:",
     height=130,
@@ -144,9 +121,6 @@ user_message = st.text_area(
 
 classify_btn = st.button("🔍 Check SMS", type="primary", use_container_width=True)
 
-# ---------------------------------------------------------
-# Classification Results
-# ---------------------------------------------------------
 if classify_btn:
     clean_text = user_message.strip()
     
@@ -160,11 +134,9 @@ if classify_btn:
         spam_prob = probs[1] * 100
         is_spam = pipeline.predict([clean_text])[0] == 1
         
-        # Check matched trigger keywords
         tokens = set(clean_text.lower().replace('.', ' ').replace(',', ' ').replace('!', ' ').split())
         matched_words = tokens.intersection(COMMON_SPAM_WORDS)
         
-        # Display Result Card
         if is_spam:
             st.markdown(f"""
             <div class="result-card-spam">
@@ -190,7 +162,6 @@ if classify_btn:
             </div>
             """, unsafe_allow_html=True)
 
-        # Metrics row
         st.markdown("##### 📊 Message Breakdown")
         m1, m2, m3 = st.columns(3)
         m1.metric("Character Count", len(clean_text))
@@ -199,7 +170,6 @@ if classify_btn:
         
         st.progress(float(probs[1]), text=f"Spam Risk: {spam_prob:.1f}% | Safe: {ham_prob:.1f}%")
         
-        # Trigger keywords info
         if matched_words:
             st.markdown("##### ⚠️ Spam Keywords Found:")
             tags = "".join([f'<span class="tag tag-spam">"{w}"</span>' for w in matched_words])
@@ -208,9 +178,6 @@ if classify_btn:
             st.markdown("##### 🔍 Keyword Analysis:")
             st.markdown('<span class="tag tag-safe">No common spam trigger words detected</span>', unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# Simple Expandable Model Info (Optional)
-# ---------------------------------------------------------
 with st.expander("ℹ️ About This Model & Accuracy"):
     st.markdown("""
     - **Algorithm:** Multinomial Naive Bayes + TF-IDF Vectorizer (3,000 features)
@@ -219,9 +186,6 @@ with st.expander("ℹ️ About This Model & Accuracy"):
     - **Spam Precision:** `100.0%` *(No legitimate personal messages misclassified as spam)*
     """)
 
-# ---------------------------------------------------------
-# Footer
-# ---------------------------------------------------------
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: #888; font-size: 13px;'>"

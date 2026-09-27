@@ -1,8 +1,3 @@
-"""
-SMS Spam Classifier - Model Training Script
-Second Year Project
-"""
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -34,7 +29,6 @@ def main():
     ])
     pipeline_nb.fit(X_train, y_train)
 
-    # Evaluate
     y_pred = pipeline_nb.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     prec = precision_score(y_test, y_pred)

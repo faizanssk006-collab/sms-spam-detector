@@ -6,7 +6,7 @@
   <title>SMS Spam Detector | Machine Learning NLP Classifier</title>
   <meta name="description" content="Real-time SMS Spam Detection web application powered by Natural Language Processing (TF-IDF + Multinomial Naive Bayes). 97.4% test accuracy with 100% spam precision.">
   
-  <!-- Google Fonts -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -61,7 +61,7 @@
       overflow-x: hidden;
     }
 
-    /* Ambient background glows */
+
     body::before {
       content: "";
       position: absolute;
@@ -83,7 +83,7 @@
       z-index: 1;
     }
 
-    /* Header */
+
     .header {
       text-align: center;
       margin-bottom: 2rem;
@@ -130,7 +130,7 @@
       margin: 0 auto;
     }
 
-    /* Stat chips */
+
     .stat-row {
       display: flex;
       justify-content: center;
@@ -156,7 +156,7 @@
       font-weight: 600;
     }
 
-    /* Main Card */
+
     .card {
       background: var(--surface);
       border: 1px solid var(--surface-border);
@@ -170,7 +170,7 @@
     }
 
 
-    /* Input area */
+
     .input-wrapper {
       position: relative;
       margin-bottom: 1rem;
@@ -226,7 +226,7 @@
       color: var(--text-muted);
     }
 
-    /* Primary Actions */
+
     .action-row {
       display: flex;
       gap: 12px;
@@ -261,7 +261,7 @@
       transform: translateY(0);
     }
 
-    /* Result Box */
+
     .result-container {
       display: none;
       margin-top: 1.5rem;
@@ -337,7 +337,7 @@
       color: #cbd5e1;
     }
 
-    /* Progress & Probability Bars */
+
     .prob-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -388,7 +388,7 @@
       background: linear-gradient(90deg, #4ade80, #22c55e);
     }
 
-    /* Keywords Tag Section */
+
     .keywords-card {
       background: rgba(11, 15, 25, 0.4);
       border: 1px solid var(--surface-border);
@@ -427,7 +427,7 @@
       color: #86efac;
     }
 
-    /* Project Architecture Info */
+
     .accordion {
       background: var(--surface);
       border: 1px solid var(--surface-border);
@@ -472,7 +472,7 @@
       margin-bottom: 0.35rem;
     }
 
-    /* Footer */
+
     footer {
       text-align: center;
       margin-top: auto;
@@ -498,7 +498,7 @@
       margin-top: 0.4rem;
     }
 
-    /* Responsive */
+
     @media (max-width: 640px) {
       h1 { font-size: 1.8rem; }
       .prob-grid { grid-template-columns: 1fr; }
@@ -510,7 +510,6 @@
 <body>
 
   <div class="container">
-    <!-- Header -->
     <header class="header">
       <div class="badge-pill">
         <span class="dot"></span> NLP Machine Learning Model
@@ -527,7 +526,6 @@
       </div>
     </header>
 
-    <!-- Main Classifier Card -->
     <main class="card">
 
       <div class="input-wrapper">
@@ -544,7 +542,6 @@
         </button>
       </div>
 
-      <!-- Result Section -->
       <div id="resultContainer" class="result-container">
         <div id="resultBanner" class="result-banner">
           <div class="result-header">
@@ -583,7 +580,6 @@
       </div>
     </main>
 
-    <!-- Model Details Accordion -->
     <section class="accordion">
       <div class="accordion-header" onclick="toggleAccordion()">
         <span>ℹ️ About Model Architecture & Dataset</span>
@@ -600,7 +596,6 @@
       </div>
     </section>
 
-    <!-- Footer -->
     <footer>
       <p>Second Year Machine Learning Project • SMS Spam Detection</p>
       <div class="footer-links">
@@ -611,10 +606,8 @@
     </footer>
   </div>
 
-  <!-- Model Weights Script -->
   <script src="model_data.js"></script>
 
-  <!-- Prediction & UI Logic -->
   <script>
 
     const COMMON_SPAM_WORDS = new Set([
@@ -656,14 +649,12 @@
       }
     }
 
-    // Scikit-Learn Multinomial Naive Bayes + TF-IDF Prediction in Pure JS
     function predictSMS(text) {
       if (!window.MODEL_DATA) {
         throw new Error("Model weights not loaded yet.");
       }
       const model = window.MODEL_DATA;
 
-      // Tokenize matches Scikit-learn's default token_pattern: r"(?u)\b\w\w+\b"
       const tokens = (text.toLowerCase().match(/\b\w\w+\b/g) || []);
       const tf = {};
       tokens.forEach(t => {
@@ -673,7 +664,6 @@
         }
       });
 
-      // TF * IDF
       let normSq = 0;
       const vec = {};
       for (const idx in tf) {
@@ -682,7 +672,6 @@
         normSq += val * val;
       }
 
-      // L2 Normalization
       const norm = Math.sqrt(normSq);
       if (norm > 0) {
         for (const idx in vec) {
@@ -690,7 +679,6 @@
         }
       }
 
-      // Log Priors + Dot product with log feature probabilities
       let logHam = model.log_prior[0];
       let logSpam = model.log_prior[1];
 
@@ -700,7 +688,6 @@
         logSpam += weight * model.feature_log_prob[1][idx];
       }
 
-      // Softmax
       const maxLog = Math.max(logHam, logSpam);
       const pHam = Math.exp(logHam - maxLog);
       const pSpam = Math.exp(logSpam - maxLog);
@@ -764,7 +751,6 @@
       spamBar.style.width = `${spamPct}%`;
       hamBar.style.width = `${hamPct}%`;
 
-      // Trigger keywords search
       const words = (text.toLowerCase().match(/\b\w+\b/g) || []);
       const matched = [...new Set(words.filter(w => COMMON_SPAM_WORDS.has(w)))];
 
