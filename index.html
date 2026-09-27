@@ -169,44 +169,6 @@
       transition: var(--transition);
     }
 
-    /* Presets Section */
-    .preset-label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-faint);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 0.6rem;
-    }
-
-    .preset-container {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 1.25rem;
-    }
-
-    .preset-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--surface-border);
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      font-weight: 500;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .preset-btn:hover {
-      background: var(--surface-hover);
-      color: var(--text-main);
-      border-color: rgba(99, 102, 241, 0.4);
-      transform: translateY(-1px);
-    }
 
     /* Input area */
     .input-wrapper {
@@ -567,14 +529,6 @@
 
     <!-- Main Classifier Card -->
     <main class="card">
-      <div class="preset-label">💡 Test with instant sample presets:</div>
-      <div class="preset-container">
-        <button class="preset-btn" id="preset-spam-1" onclick="loadSample('spam1')">🎁 $1,000 Walmart Card</button>
-        <button class="preset-btn" id="preset-spam-2" onclick="loadSample('spam2')">⚡ Urgent Prize Claim</button>
-        <button class="preset-btn" id="preset-spam-3" onclick="loadSample('spam3')">💳 Account Suspended</button>
-        <button class="preset-btn" id="preset-ham-1" onclick="loadSample('ham1')">☕ Coffee Meetup</button>
-        <button class="preset-btn" id="preset-ham-2" onclick="loadSample('ham2')">📚 Study Group Notes</button>
-      </div>
 
       <div class="input-wrapper">
         <textarea id="smsInput" placeholder="Type or paste any SMS message here... (e.g. Free entry in 2 a weekly competition to win cash prizes! Text WIN to 87121...)"></textarea>
@@ -662,13 +616,6 @@
 
   <!-- Prediction & UI Logic -->
   <script>
-    const SAMPLES = {
-      spam1: "Congratulations! You have won a $1,000 Walmart Gift Card. Click here now http://claim-prize.fake/deal to claim your prize! Reply STOP to cancel.",
-      spam2: "URGENT! You have won a 1 week FREE holiday to Spain! Call 09061701461 now to claim your ticket. T&Cs apply.",
-      spam3: "Alert: Your bank account has been suspended due to suspicious activity. Verify your password now at http://secure-verify.net",
-      ham1: "Hey! Are you free for lunch today around 1 PM at the college canteen? Let me know.",
-      ham2: "Hi, I just uploaded the chapter 4 machine learning notes to our shared drive. Check it out whenever you're free!"
-    };
 
     const COMMON_SPAM_WORDS = new Set([
       'free', 'win', 'winner', 'cash', 'prize', 'claim', 'urgent', 'txt', 'reply',
@@ -689,11 +636,6 @@
       charCount.textContent = `${chars} characters • ${words} words`;
     }
 
-    function loadSample(key) {
-      textarea.value = SAMPLES[key];
-      updateCounts();
-      handleClassify();
-    }
 
     function clearInput() {
       textarea.value = "";
