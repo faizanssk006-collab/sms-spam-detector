@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Spam Detector | Machine Learning NLP Classifier</title>
+  <meta name="description" content="Real-time SMS Spam Detection web application powered by Natural Language Processing (TF-IDF + Multinomial Naive Bayes). 97.4% test accuracy with 100% spam precision.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 0%, #171d33 0%, #0b0f19 100%);
+      --surface: rgba(22, 29, 47, 0.7);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-hover: rgba(30, 39, 63, 0.85);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+      
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --danger-border: #ef4444;
+      --danger-text: #f87171;
+      --danger-glow: rgba(239, 68, 68, 0.25);
+      
+      --success-bg: rgba(34, 197, 94, 0.12);
+      --success-border: #22c55e;
+      --success-text: #4ade80;
+      --success-glow: rgba(34, 197, 94, 0.25);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0f19;
+      background-image: var(--bg-gradient);
+      min-height: 100vh;
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1rem 3rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glows */
+    body::before {
+      content: "";
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 350px;
+      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.18), transparent 70%);
+      filter: blur(50px);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+
+    .badge-pill span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    h1 {
+      font-size: 2.35rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 60%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    /* Stat chips */
+    .stat-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--surface-border);
+      border-radius: 9999px;
+      padding: 4px 14px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-chip strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Main Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      margin-bottom: 1.75rem;
+      transition: var(--transition);
+    }
+
+    /* Presets Section */
+    .preset-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.6rem;
+    }
+
+    .preset-container {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .preset-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-main);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+
+    /* Input area */
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 130px;
+      background: rgba(11, 15, 25, 0.65);
+      border: 1.5px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.96rem;
+      line-height: 1.5;
+      resize: vertical;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      background: rgba(11, 15, 25, 0.85);
+    }
+
+    textarea::placeholder {
+      color: var(--text-faint);
+    }
+
+    .input-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      padding: 0 4px;
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-faint);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: var(--transition);
+    }
+
+    .clear-btn:hover {
+      color: var(--text-muted);
+    }
+
+    /* Primary Actions */
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 1rem;
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      font-size: 0.98rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px -4px var(--accent-glow);
+      transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.93;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -4px var(--accent-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Result Box */
+    .result-container {
+      display: none;
+      margin-top: 1.5rem;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-banner {
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+      border-width: 1.5px;
+      border-style: solid;
+    }
+
+    .result-banner.spam {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      box-shadow: 0 8px 24px -6px var(--danger-glow);
+    }
+
+    .result-banner.ham {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      box-shadow: 0 8px 24px -6px var(--success-glow);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+
+    .result-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-banner.spam .result-title {
+      color: var(--danger-text);
+    }
+
+    .result-banner.ham .result-title {
+      color: var(--success-text);
+    }
+
+    .result-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .result-banner.spam .result-score {
+      color: var(--danger-text);
+    }
+
+    .result-banner.ham .result-score {
+      color: var(--success-text);
+    }
+
+    .result-description {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+
+    /* Progress & Probability Bars */
+    .prob-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1.25rem;
+    }
+
+    .prob-card {
+      background: rgba(11, 15, 25, 0.5);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+    }
+
+    .prob-card-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .prob-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.5s ease-out;
+    }
+
+    .fill-spam {
+      background: linear-gradient(90deg, #f87171, #ef4444);
+    }
+
+    .fill-ham {
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+    }
+
+    /* Keywords Tag Section */
+    .keywords-card {
+      background: rgba(11, 15, 25, 0.4);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+
+    .keywords-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-faint);
+      margin-bottom: 8px;
+    }
+
+    .keyword-pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+
+    .keyword-pill.spam {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .keyword-pill.safe {
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+
+    /* Project Architecture Info */
+    .accordion {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .accordion-header {
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      user-select: none;
+      transition: var(--transition);
+    }
+
+    .accordion-header:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 16px 18px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--surface-border);
+      line-height: 1.6;
+    }
+
+    .accordion-content ul {
+      margin-left: 1.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .accordion-content li {
+      margin-bottom: 0.35rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: auto;
+      font-size: 0.85rem;
+      color: var(--text-faint);
+    }
+
+    footer a {
+      color: #a5b4fc;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    footer a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 0.4rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      h1 { font-size: 1.8rem; }
+      .prob-grid { grid-template-columns: 1fr; }
+      .card { padding: 1.25rem; }
+      .stat-row { flex-direction: column; align-items: center; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="badge-pill">
+        <span class="dot"></span> NLP Machine Learning Model
+      </div>
+      <h1>SMS Spam Detector</h1>
+      <p class="subtitle">
+        Classify text messages in real-time as legitimate or spam using a pre-trained TF-IDF & Multinomial Naive Bayes pipeline.
+      </p>
+
+      <div class="stat-row">
+        <div class="stat-chip">🎯 Accuracy: <strong>97.39%</strong></div>
+        <div class="stat-chip">🛡️ Spam Precision: <strong>100.0%</strong></div>
+        <div class="stat-chip">⚡ Latency: <strong>&lt; 1ms (Client-Side)</strong></div>
+      </div>
+    </header>
+
+    <!-- Main Classifier Card -->
+    <main class="card">
+      <div class="preset-label">💡 Test with instant sample presets:</div>
+      <div class="preset-container">
+        <button class="preset-btn" id="preset-spam-1" onclick="loadSample('spam1')">🎁 $1,000 Walmart Card</button>
+        <button class="preset-btn" id="preset-spam-2" onclick="loadSample('spam2')">⚡ Urgent Prize Claim</button>
+        <button class="preset-btn" id="preset-spam-3" onclick="loadSample('spam3')">💳 Account Suspended</button>
+        <button class="preset-btn" id="preset-ham-1" onclick="loadSample('ham1')">☕ Coffee Meetup</button>
+        <button class="preset-btn" id="preset-ham-2" onclick="loadSample('ham2')">📚 Study Group Notes</button>
+      </div>
+
+      <div class="input-wrapper">
+        <textarea id="smsInput" placeholder="Type or paste any SMS message here... (e.g. Free entry in 2 a weekly competition to win cash prizes! Text WIN to 87121...)"></textarea>
+        <div class="input-meta">
+          <span id="charCount">0 characters • 0 words</span>
+          <button class="clear-btn" id="clearBtn" onclick="clearInput()">Clear</button>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-primary" id="classifyBtn" onclick="handleClassify()">
+          <span>🔍 Analyze Message</span>
+        </button>
+      </div>
+
+      <!-- Result Section -->
+      <div id="resultContainer" class="result-container">
+        <div id="resultBanner" class="result-banner">
+          <div class="result-header">
+            <div id="resultTitle" class="result-title"></div>
+            <div id="resultScore" class="result-score"></div>
+          </div>
+          <p id="resultDesc" class="result-description"></p>
+        </div>
+
+        <div class="prob-grid">
+          <div class="prob-card">
+            <div class="prob-card-header">
+              <span>Spam Probability</span>
+              <span id="spamProbText" class="prob-val">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="spamProgressBar" class="progress-bar-fill fill-spam" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="prob-card">
+            <div class="prob-card-header">
+              <span>Safe (Ham) Probability</span>
+              <span id="hamProbText" class="prob-val">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="hamProgressBar" class="progress-bar-fill fill-ham" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="keywords-card">
+          <div class="keywords-title">Trigger Keyword Scan:</div>
+          <div id="keywordsList"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Model Details Accordion -->
+    <section class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion()">
+        <span>ℹ️ About Model Architecture & Dataset</span>
+        <span id="accIcon">▼</span>
+      </div>
+      <div class="accordion-content" id="accContent">
+        <p>This project uses Natural Language Processing (NLP) techniques trained on the <strong>SMS Spam Collection dataset</strong> (5,572 messages):</p>
+        <ul>
+          <li><strong>Preprocessing:</strong> Text lowercase normalization, URL removal, punctuation stripping, and tokenization.</li>
+          <li><strong>Feature Extraction:</strong> <code>TfidfVectorizer</code> with English stop words filter and 3,000 max features.</li>
+          <li><strong>Classifier:</strong> <code>MultinomialNB</code> (Multinomial Naive Bayes) achieving <strong>97.39% accuracy</strong> and <strong>100.0% precision</strong>.</li>
+          <li><strong>Zero Backend Delay:</strong> Mathematically identical to Scikit-learn, executing in your browser via client-side vector weights.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>Second Year Machine Learning Project • SMS Spam Detection</p>
+      <div class="footer-links">
+        <a href="https://github.com" target="_blank" id="ghRepoLink">View on GitHub</a>
+        <span>•</span>
+        <a href="#about" onclick="toggleAccordion()">Model Documentation</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Model Weights Script -->
+  <script src="model_data.js"></script>
+
+  <!-- Prediction & UI Logic -->
+  <script>
+    const SAMPLES = {
+      spam1: "Congratulations! You have won a $1,000 Walmart Gift Card. Click here now http://claim-prize.fake/deal to claim your prize! Reply STOP to cancel.",
+      spam2: "URGENT! You have won a 1 week FREE holiday to Spain! Call 09061701461 now to claim your ticket. T&Cs apply.",
+      spam3: "Alert: Your bank account has been suspended due to suspicious activity. Verify your password now at http://secure-verify.net",
+      ham1: "Hey! Are you free for lunch today around 1 PM at the college canteen? Let me know.",
+      ham2: "Hi, I just uploaded the chapter 4 machine learning notes to our shared drive. Check it out whenever you're free!"
+    };
+
+    const COMMON_SPAM_WORDS = new Set([
+      'free', 'win', 'winner', 'cash', 'prize', 'claim', 'urgent', 'txt', 'reply',
+      'call', 'selected', 'won', 'award', 'guaranteed', 'bonus', 'credit', 'account',
+      'suspended', 'password', 'verify', 'click', 'subscribe', 'congratulations', 'apply',
+      'holiday', 'stop', 'urgent', 'ticket', 'alert'
+    ]);
+
+    const textarea = document.getElementById('smsInput');
+    const charCount = document.getElementById('charCount');
+
+    textarea.addEventListener('input', updateCounts);
+
+    function updateCounts() {
+      const text = textarea.value;
+      const chars = text.length;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      charCount.textContent = `${chars} characters • ${words} words`;
+    }
+
+    function loadSample(key) {
+      textarea.value = SAMPLES[key];
+      updateCounts();
+      handleClassify();
+    }
+
+    function clearInput() {
+      textarea.value = "";
+      updateCounts();
+      document.getElementById('resultContainer').style.display = 'none';
+      textarea.focus();
+    }
+
+    function toggleAccordion() {
+      const content = document.getElementById('accContent');
+      const icon = document.getElementById('accIcon');
+      if (content.style.display === 'block') {
+        content.style.display = 'none';
+        icon.textContent = '▼';
+      } else {
+        content.style.display = 'block';
+        icon.textContent = '▲';
+      }
+    }
+
+    // Scikit-Learn Multinomial Naive Bayes + TF-IDF Prediction in Pure JS
+    function predictSMS(text) {
+      if (!window.MODEL_DATA) {
+        throw new Error("Model weights not loaded yet.");
+      }
+      const model = window.MODEL_DATA;
+
+      // Tokenize matches Scikit-learn's default token_pattern: r"(?u)\b\w\w+\b"
+      const tokens = (text.toLowerCase().match(/\b\w\w+\b/g) || []);
+      const tf = {};
+      tokens.forEach(t => {
+        if (model.vocab[t] !== undefined) {
+          const idx = model.vocab[t];
+          tf[idx] = (tf[idx] || 0) + 1;
+        }
+      });
+
+      // TF * IDF
+      let normSq = 0;
+      const vec = {};
+      for (const idx in tf) {
+        const val = tf[idx] * model.idf[idx];
+        vec[idx] = val;
+        normSq += val * val;
+      }
+
+      // L2 Normalization
+      const norm = Math.sqrt(normSq);
+      if (norm > 0) {
+        for (const idx in vec) {
+          vec[idx] /= norm;
+        }
+      }
+
+      // Log Priors + Dot product with log feature probabilities
+      let logHam = model.log_prior[0];
+      let logSpam = model.log_prior[1];
+
+      for (const idx in vec) {
+        const weight = vec[idx];
+        logHam += weight * model.feature_log_prob[0][idx];
+        logSpam += weight * model.feature_log_prob[1][idx];
+      }
+
+      // Softmax
+      const maxLog = Math.max(logHam, logSpam);
+      const pHam = Math.exp(logHam - maxLog);
+      const pSpam = Math.exp(logSpam - maxLog);
+      const total = pHam + pSpam;
+
+      const hamProb = pHam / total;
+      const spamProb = pSpam / total;
+
+      return {
+        isSpam: spamProb > 0.5,
+        hamProb: hamProb,
+        spamProb: spamProb
+      };
+    }
+
+    function handleClassify() {
+      const text = textarea.value.trim();
+      if (!text) {
+        alert("Please enter or paste an SMS message to analyze.");
+        return;
+      }
+
+      try {
+        const result = predictSMS(text);
+        displayResult(result, text);
+      } catch (err) {
+        console.error(err);
+        alert("Model failed to execute: " + err.message);
+      }
+    }
+
+    function displayResult(result, text) {
+      const container = document.getElementById('resultContainer');
+      const banner = document.getElementById('resultBanner');
+      const title = document.getElementById('resultTitle');
+      const score = document.getElementById('resultScore');
+      const desc = document.getElementById('resultDesc');
+      const spamText = document.getElementById('spamProbText');
+      const hamText = document.getElementById('hamProbText');
+      const spamBar = document.getElementById('spamProgressBar');
+      const hamBar = document.getElementById('hamProgressBar');
+      const keywordsList = document.getElementById('keywordsList');
+
+      const spamPct = (result.spamProb * 100).toFixed(1);
+      const hamPct = (result.hamProb * 100).toFixed(1);
+
+      if (result.isSpam) {
+        banner.className = 'result-banner spam';
+        title.innerHTML = '🚨 SPAM DETECTED';
+        score.textContent = `${spamPct}% Confidence`;
+        desc.textContent = 'This message contains language and structural patterns typical of promotional scams, prize phishing, or fraudulent notices.';
+      } else {
+        banner.className = 'result-banner ham';
+        title.innerHTML = '✅ LEGITIMATE MESSAGE (HAM)';
+        score.textContent = `${hamPct}% Confidence`;
+        desc.textContent = 'This message looks like normal personal communication and does not show high-risk spam patterns.';
+      }
+
+      spamText.textContent = `${spamPct}%`;
+      hamText.textContent = `${hamPct}%`;
+      spamBar.style.width = `${spamPct}%`;
+      hamBar.style.width = `${hamPct}%`;
+
+      // Trigger keywords search
+      const words = (text.toLowerCase().match(/\b\w+\b/g) || []);
+      const matched = [...new Set(words.filter(w => COMMON_SPAM_WORDS.has(w)))];
+
+      keywordsList.innerHTML = '';
+      if (matched.length > 0) {
+        matched.forEach(w => {
+          const pill = document.createElement('span');
+          pill.className = 'keyword-pill spam';
+          pill.textContent = `"${w}"`;
+          keywordsList.appendChild(pill);
+        });
+      } else {
+        const safePill = document.createElement('span');
+        safePill.className = 'keyword-pill safe';
+        safePill.textContent = 'No high-risk spam keywords detected';
+        keywordsList.appendChild(safePill);
+      }
+
+      container.style.display = 'block';
+      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+</body>
+</html>
